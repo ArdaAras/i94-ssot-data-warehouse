@@ -14,6 +14,7 @@ Star schema shall be inserted here
     2. Global Land and Temperatures
     3. US Cities Demographics
     4. Airport codes
+        * This contains information about airports, heliports and sea plane bases
 
 ## Considerations
 * Unnamed column in immigration dataset will be dropped since there is no information about it.
