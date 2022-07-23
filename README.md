@@ -31,8 +31,6 @@ Star schema shall be inserted here
 * Some of the columns that are by no means helpful for the scope of the project are also removed.
 * Only US-related data in the temperatures data are used within the project. The temperature data remaining are averaged and grouped by city.
 
-*Note: See the data exploration and cleaning section for further details.*
-
 ## Data dictionary
 
 TODO: Shall be inserted here as a table
