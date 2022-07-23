@@ -25,11 +25,17 @@ Star schema shall be inserted here
     7. airport-codes_csv.csv           : Provided within Udacity workspace. Contains information regarding airports, heliports and seaplane bases throughout the world.
     8. GlobalLandTemperaturesByCity.csv: Provided within Udacity workspace. Contains timestamped temperature information of cities across the world.
 
-## Considerations
-* Unnamed column in immigration dataset will be dropped since there is no information about it.
-* Non-US data in the temperatures dataset will be cleaned.
+## Data cleaning and considerations
+* All the null values have been cleared of datasets.
+* Columns with large amounts of missing values have been removed.
+* Some of the columns that are by no means helpful for the scope of the project are also removed.
+* Only US-related data in the temperatures data are used within the project. The temperature data remaining are averaged and grouped by city.
 
 *Note: See the data exploration and cleaning section for further details.*
+
+## Data dictionary
+
+TODO: Shall be inserted here as a table
 
 ## Author
 
