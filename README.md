@@ -4,6 +4,13 @@
 
 United States Department of Homeland Security decided to create a single source of truth database to analyze immigrant behavior. They provided a variety of datasets including I94 immigration data logs, U.S. cities demographics, travel ports, and approximate temperatures across cities.
 
+## Technologies and tools
+
+![Python](https://img.shields.io/badge/Python-3.6.3-blue)
+![Spark](https://img.shields.io/badge/Apache%20Spark-2.4.3-green)
+![Redshift](https://img.shields.io/badge/AWS-Redshift-red)
+![S3](https://img.shields.io/badge/AWS-S3-blue)
+
 ## Data model
 
 Star schema shall be inserted here
