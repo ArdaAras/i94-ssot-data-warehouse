@@ -9,12 +9,14 @@ United States Department of Homeland Security decided to create a single source 
 Star schema shall be inserted here
 
 ## Files
-    1. I94 Immigration data
-        * This contains immigrants information
-    2. Global Land and Temperatures
-    3. US Cities Demographics
-    4. Airport codes
-        * This contains information about airports, heliports and sea plane bases
+    1. Capstone Project Template.ipynb : This file is used to explore and clean data as well as create the pipeline.
+    2. I94_SAS_Labels_Descriptions.SAS : Contains column descriptions of immigration files.
+    3. SAS Data files                  : Provided within Udacity workspace. Month by month I94 immigration log files.
+    4. dl.cfg                          : Contains access and secret access keys for AWS.
+    5. etl.py                          : This file contains the source code of the whole etl process.
+    6. us-cities-demographics.csv      : Contains information regarding US cities demographics
+    7. airport-codes_csv.csv           : Provided within Udacity workspace. Contains information regarding airports, heliports and seaplane bases throughout the world.
+    8. GlobalLandTemperaturesByCity.csv: Provided within Udacity workspace. Contains timestamped temperature information of cities across the world.
 
 ## Considerations
 * Unnamed column in immigration dataset will be dropped since there is no information about it.
