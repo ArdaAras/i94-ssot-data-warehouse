@@ -1,5 +1,6 @@
 import configparser
 import os
+import psycopg2
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col,isnan,when,count,avg
 from pyspark.sql.types import TimestampType
@@ -257,8 +258,18 @@ def main():
     # This will create fact_immig, dim_time, dim_cities and dim_ports
     process_immigrations_ports_cities_data(spark, output_data)
     
-    # TODO: Data quality and copy to redshift
+    # Create a connection to Redshift
+    try:
+        conn=psycopg2.connect(dbname=config['REDSHIFT']['DB_NAME'], host=config['REDSHIFT']['DB_HOST'], \
+                              port=config['REDSHIFT']['DB_PORT'], user=config['REDSHIFT']['DB_USER'], \
+                              password=config['REDSHIFT']['DB_PASSWORD'])
+        conn.set_session(autocommit=True)
+        cur = conn.cursor()
+    except Exception as err:
+        print (f'Error:{err}')
     
-    
+    # TODO: Copy from S3 to Redshift
+    # TODO: Perform data quality checks
+    # Happy ending!
 if __name__ == "__main__":
     main()
