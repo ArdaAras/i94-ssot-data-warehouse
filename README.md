@@ -19,7 +19,7 @@ Star schema shall be inserted here
     1. Capstone Project Template.ipynb : This file is used to explore and clean data as well as create the pipeline.
     2. I94_SAS_Labels_Descriptions.SAS : Contains column descriptions of immigration files.
     3. SAS Data files                  : Provided within Udacity workspace. Month by month I94 immigration log files.
-    4. dl.cfg                          : Contains access and secret access keys for AWS.
+    4. dl.cfg                          : Contains access, secret access keys and redshift database configuration information.
     5. etl.py                          : This file contains the source code of the whole etl process.
     6. us-cities-demographics.csv      : Contains information regarding US cities demographics
     7. airport-codes_csv.csv           : Provided within Udacity workspace. Contains information regarding airports, heliports and seaplane bases throughout the world.
