@@ -24,6 +24,7 @@ Star schema shall be inserted here
     6. us-cities-demographics.csv      : Contains information regarding US cities demographics
     7. airport-codes_csv.csv           : Provided within Udacity workspace. Contains information regarding airports, heliports and seaplane bases throughout the world.
     8. GlobalLandTemperaturesByCity.csv: Provided within Udacity workspace. Contains timestamped temperature information of cities across the world.
+    9. create_tables.sql               : Contains Amazon Redshift table creation queries.
 
 ## Data Cleaning and Considerations
 * All the null values have been cleared of datasets.
