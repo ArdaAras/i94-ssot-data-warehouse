@@ -135,7 +135,7 @@ def process_immigrations_ports_cities_data(spark, output_data):
                             .withColumnRenamed('Foreign-born','foreign_born') \
                             .withColumnRenamed('Average Household Size','avg_household_size')
     # Cache it for optimization
-    final_cities_df = final_ports_df.cache()
+    final_cities_df = final_cities_df.cache()
     '''
     
     # Start working on immigrations data
