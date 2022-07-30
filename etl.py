@@ -36,7 +36,7 @@ def sas_date_to_datetime(sas_date):
     '''
     if sas_date is None:
         return None
-    return datetime.date(1960, 1, 1) + datetime.timedelta(days=sas_date)
+    return str(datetime.date(1960, 1, 1) + datetime.timedelta(days=sas_date))
 
 
 def generate_time_df(immigration_data):
