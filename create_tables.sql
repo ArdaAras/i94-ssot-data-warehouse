@@ -6,14 +6,14 @@ CREATE TABLE IF NOT EXISTS public.dim_time (
     week int,
     weekday int,
     PRIMARY KEY (sas_timestamp)
-)
+);
 
 CREATE TABLE IF NOT EXISTS public.dim_temperatures (
     city varchar(256) distkey,
     avg_temp float,
     avg_temp_uncertainty float,
     PRIMARY KEY (city)
-)
+);
 
 CREATE TABLE IF NOT EXISTS public.dim_cities (
     city varchar(256) distkey,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.dim_cities (
     foreign_born int,
     avg_household_size float,
     PRIMARY KEY (city)
-)
+);
 
 CREATE TABLE IF NOT EXISTS public.dim_ports (
     port_id varchar(32) distkey,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.dim_ports (
     iata_code varchar(32),
     iso_region varchar(32),
     PRIMARY KEY (port_id)
-)
+);
 
 CREATE TABLE IF NOT EXISTS public.fact_immigrations (
     immigration_id int,
@@ -51,4 +51,4 @@ CREATE TABLE IF NOT EXISTS public.fact_immigrations (
     visatype varchar(32),
     gender varchar(32),
     PRIMARY KEY (immigration_id)
-)
+);
