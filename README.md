@@ -13,7 +13,7 @@ United States Department of Homeland Security decided to create a single source 
 
 ## Data Model
 
-Star schema shall be inserted here
+![star_schema](star_schema.png)
 
 ## Files
     1. Capstone Project Template.ipynb : This file is used to explore and clean data as well as create the pipeline.
