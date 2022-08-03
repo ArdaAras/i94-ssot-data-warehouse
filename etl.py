@@ -14,6 +14,9 @@ config.read('dl.cfg')
 os.environ['AWS_ACCESS_KEY_ID']=config['KEYS']['AWS_ACCESS_KEY_ID']
 os.environ['AWS_SECRET_ACCESS_KEY']=config['KEYS']['AWS_SECRET_ACCESS_KEY']
 
+# Warehouse table names
+table_names = ['dim_time','dim_cities','dim_ports','dim_temperatures','fact_immigrations']
+
 def create_spark_session():
     '''
     Creates a spark session and returns it
@@ -27,6 +30,10 @@ def create_spark_session():
 
 
 def split_iso_region(iso_region):
+    '''
+    Returns the state part of iso_region column
+    For example: Input 'US-CA' yields 'CA'
+    '''
     return iso_region.split("-")[1]
 
 
@@ -70,18 +77,10 @@ def generate_time_df(immigration_data):
     unified_df = unified_df.drop('arrivalDateAsDATE')
 
     # Rename
-    unified_df = unified_df.withColumnRenamed('arrival_date','timestamp')
+    unified_df = unified_df.withColumnRenamed('arrival_date','sas_timestamp')
     
     return unified_df
-
-
-def split_iso_region(iso_region):
-    '''
-    Returns the state part of iso_region column
-    For example: Input 'US-CA' yields 'CA'
-    '''
-    return iso_region.split("-")[1]
-    
+  
     
 def process_immigrations_ports_cities_data(spark, output_data):
     time_output_data = output_data + 'dim_time'
@@ -89,7 +88,6 @@ def process_immigrations_ports_cities_data(spark, output_data):
     ports_output_data = output_data + 'dim_ports'
     immigrations_output_data = output_data + 'fact_immigrations'
     
-    '''
     # Read cities
     city_df = spark.read.options(header="true",inferSchema="true",nullValue = "NULL",delimiter=";").csv('us-cities-demographics.csv')
     # drop race and count columns
@@ -122,6 +120,9 @@ def process_immigrations_ports_cities_data(spark, output_data):
     
     # Cache it for optimization
     final_ports_df = final_ports_df.cache()
+    
+    print(f'Final ports row count: {final_ports_df.count()}')
+    final_ports_df.printSchema()
 
     final_cities_df = combined_df.select(['City','State','Median Age','Male Population','Female Population','Total Population' \
                                       ,'Number of Veterans','Foreign-born','Average Household Size']) \
@@ -136,10 +137,17 @@ def process_immigrations_ports_cities_data(spark, output_data):
                             .withColumnRenamed('Average Household Size','avg_household_size')
     # Cache it for optimization
     final_cities_df = final_cities_df.cache()
-    '''
+    
+    print(f'Final cities row count: {final_cities_df.count()}')
+    final_cities_df.printSchema()
+    
+    # Write cities and ports data to S3
+    final_cities_df.write.parquet(cities_output_data)
+    final_ports_df.write.parquet(ports_output_data)
     
     # Start working on immigrations data
-
+    print('Started processing immigration files...')
+    
     # These columns are either meaningless for the scope of the project or almost empty, so we are removing them
     drop_cols = ("i94yr","i94mon","i94res","count","visapost","occup","entdepa","entdepd","entdepu","matflag" \
              ,"biryear","insnum","fltno","dtadfile","dtaddto","airline","admnum")
@@ -147,41 +155,6 @@ def process_immigrations_ports_cities_data(spark, output_data):
     # Month name list
     months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
     
-    
-    immigration_data_path = f'../../data/18-83510-I94-Data-2016/i94_feb16_sub.sas7bdat'
-        
-    # Read data using month in input file name
-    df = spark.read.format('com.github.saurfang.sas.spark').load(immigration_data_path)
-        
-    df = df.dropDuplicates().drop(*drop_cols).na.drop()
-        
-    # Fix column names and types
-    df = df.withColumnRenamed('cicid','immigration_id')
-    df = df.withColumn('immigration_id',df['immigration_id'].cast('int'))
-    df = df.withColumnRenamed('i94cit','origin')
-    df = df.withColumn('origin',df['origin'].cast('int'))
-    df = df.withColumnRenamed('i94bir','age')
-    df = df.withColumn('age',df['age'].cast('int'))
-    df = df.withColumnRenamed('i94mode','arrival_mode')
-    df = df.withColumn('arrival_mode',df['arrival_mode'].cast('int'))
-    df = df.withColumnRenamed('i94visa','visa')
-    df = df.withColumn('visa',df['visa'].cast('int'))
-    df = df.withColumnRenamed('i94port','landing_port') \
-    .withColumnRenamed('arrdate','arrival_date') \
-    .withColumnRenamed('i94mode','arrival_mode') \
-    .withColumnRenamed('i94addr','state') \
-    .withColumnRenamed('depdate','departure_date')
-
-    # Now generate time df from current immigration data using 'arrival_date' and 'departure_date' columns
-    time_df = generate_time_df(df)
-    time_df.printSchema()
-    print(f'Month: feb, DF row count: {time_df.count()}')
-
-    # partition time data by month
-    time_df.write.parquet(time_output_data)
-
-    
-    '''
     for month in months:
         immigration_data_path = f'../../data/18-83510-I94-Data-2016/i94_{month}16_sub.sas7bdat'
         
@@ -209,34 +182,28 @@ def process_immigrations_ports_cities_data(spark, output_data):
             .withColumnRenamed('i94addr','state') \
             .withColumnRenamed('depdate','departure_date')
 
-        # Now generate time df from current immigration data using 'arrival_date' and 'departure_date' columns
-        time_df = generate_time_df(df)
-        #print(f'Month: {month}, DF row count: {time_df.count()}')
-        
         # Join conditions as a list
         conditions = [df.state == final_ports_df.iso_region, df.landing_port == final_ports_df.iata_code]
 
         # For final fact_immig, join ports on conditions described above
         joined_immig = df.join(final_ports_df, conditions)
-
+        
         # Final df to write to S3
         fact_immig_df = joined_immig.select('immigration_id','origin','landing_port' \
                                             ,'arrival_date','departure_date','arrival_mode' \
                                             ,'city','age','visa','visatype','gender')
+        print(f'Month: {month}, immig DF row count: {fact_immig_df.count()}')
+        
+        time_df = generate_time_df(fact_immig_df)
+        print(f'Month: {month}, Time DF row count: {time_df.count()}')
         
         # Write current time and immigrations data to S3
         # Append data to existing folders throughout the loop
-        # partition time data by month
-        time_df.write.mode('append').partitionBy('day').parquet(time_output_data)
-        # partition immigrations data by city and landing_port
-        fact_immig_df.write.mode('append').partitionBy('age').parquet(immigrations_output_data)
-    '''
-    # Write cities and ports data to S3
-    # partition city data by state
-    #final_cities_df.write.partitionBy('state').parquet(cities_output_data)
-    # partition ports data by iso_region (alias 'state')
-    #final_ports_df.write.partitionBy('iso_region').parquet(ports_output_data)
-
+        time_df.write.mode('append').parquet(time_output_data)
+        fact_immig_df.write.mode('append').parquet(immigrations_output_data)
+    
+    print('Data processing has been completed.')
+    
     return
 
 
@@ -282,26 +249,25 @@ def process_temperature_data(spark, output_data):
 
 def main():
     '''
-    Creates spark session and 
-    TODO TODO
-    Finally, writes the transformed tables to given output S3 bucket in parquet format
+    Creates spark session,
+    Processes data files and creates fact and dimension tables,
+    Writes the tables to the given S3 bucket in parquet format,
+    Copies data from S3 to Redshift and performs data quality checks.
+    '''
     
-    '''
-    '''
     spark = create_spark_session()
     output_data = "s3a://i94-udacity-capstone-warehouse/"
-    
-    # This will create dim_temperatures
-    #process_temperature_data(spark, output_data)
     
     # This will create fact_immig, dim_time, dim_cities and dim_ports
     process_immigrations_ports_cities_data(spark, output_data)
     
+    # This will create dim_temperatures
+    process_temperature_data(spark, output_data)
     
-    # Data have been successfully written to S3
+    # At this point, all data have been successfully written to S3
     # Now, copy to redshift
-    '''
     
+    # Create connection
     try:
         conn=psycopg2.connect(dbname=config['REDSHIFT']['DB_NAME'], host=config['REDSHIFT']['DB_HOST'], \
                               port=config['REDSHIFT']['DB_PORT'], user=config['REDSHIFT']['DB_USER'], \
@@ -311,23 +277,26 @@ def main():
     except Exception as err:
         print (f'Error:{err}')
     
+    # Copy
+    for table in table_names:
+        copy_query = """
+                COPY {}
+                FROM '{}'
+                ACCESS_KEY_ID '{}'
+                SECRET_ACCESS_KEY '{}'
+                FORMAT AS PARQUET
+            """
+        s3_path = 's3://i94-udacity-capstone-warehouse/{}'
+
+        print(f'Copying {table} table...')
+        
+        cur.execute(copy_query.format(table, s3_path.format(table) \
+                    , config['KEYS']['AWS_ACCESS_KEY_ID'] \
+                    , config['KEYS']['AWS_SECRET_ACCESS_KEY']))
     
-    # Copy to redshift
-    copy_sql = """
-        COPY {}
-        FROM '{}'
-        ACCESS_KEY_ID '{}'
-        SECRET_ACCESS_KEY '{}'
-        FORMAT AS PARQUET
-    """.format('dim_time','s3://i94-udacity-capstone-warehouse/dim_time/', \
-               config['KEYS']['AWS_ACCESS_KEY_ID'], \
-               config['KEYS']['AWS_SECRET_ACCESS_KEY'])
-    
-    
-    cur.execute(copy_sql)
-    
-    
+    print('Performing data quality checks...')
     # TODO: Data quality checks
+    
     
 if __name__ == "__main__":
     main()
