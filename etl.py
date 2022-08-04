@@ -160,8 +160,8 @@ def process_immigrations_ports_cities_data(spark, output_data):
         
         # Read data using month in input file name
         df = spark.read.format('com.github.saurfang.sas.spark').load(immigration_data_path)
-        # Cache before using it
-        df = df.cache()
+        # Repartition
+        df = df.repartition(8)
         
         df = df.dropDuplicates().drop(*drop_cols).na.drop()
         
