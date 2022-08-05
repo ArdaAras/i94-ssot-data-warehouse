@@ -77,6 +77,21 @@ United States Department of Homeland Security decided to create a single source 
 | dim_time  | week  | INT4 | week number of the sas_timestamp |
 | dim_time  | weekday | INT4 | 1=Sunday, 2=Monday, 3=Tuesday, 4=Wednesday, 5=Thursday, 6=Friday, 7=Saturday |
 
+## What If...
+
+* The data was increased by 100x ?
+  
+    Even in current situation, whole ETL process takes too long and its usage on a narrow schedule may not be meaningful. Thats why only the first 3 months of dataset is used. If the data is to be increased by 100x and the remaining months of data are to be added, it is highly recommended to use an EMR cluster with multiple nodes (or similar tech) to improve performance.
+
+* The pipelines would be run on a daily basis by 7 am every day ?
+    
+    Apache Airflow would be an excellent choice to run the ETL on a daily basis. DAG should be configured as follow:
+    
+    <pre><code>schedule_interval='0 7 * * *'</code></pre>
+
+* The database needed to be accessed by 100+ people ?
+
+    Amazon Redshift can handle 100+ users easily.
 
 ## Author
 
