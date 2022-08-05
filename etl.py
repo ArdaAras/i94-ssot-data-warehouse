@@ -83,10 +83,17 @@ def generate_time_df(immigration_data):
   
     
 def process_immigrations_ports_cities_data(spark, output_data):
+    '''
+    Processes immigrations, ports, and cities data and writes them to S3
+    Parameters:
+            spark       (SparkSession): Spark session object
+            output_data          (str): Output S3 bucket
+    '''
     time_output_data = output_data + 'dim_time'
     cities_output_data = output_data + 'dim_cities'
     ports_output_data = output_data + 'dim_ports'
     immigrations_output_data = output_data + 'fact_immigrations'
+    
     
     # Read cities
     city_df = spark.read.options(header="true",inferSchema="true",nullValue = "NULL",delimiter=";").csv('us-cities-demographics.csv')
@@ -152,15 +159,19 @@ def process_immigrations_ports_cities_data(spark, output_data):
     drop_cols = ("i94yr","i94mon","i94res","count","visapost","occup","entdepa","entdepd","entdepu","matflag" \
              ,"biryear","insnum","fltno","dtadfile","dtaddto","airline","admnum")
 
-    # Month name list
-    months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+    # Note: For demonstration, we are using the first 3 months only and not all of them 
+    # (This trio have approximately 1.6M rows in total after cleaning)
+    months = ['jan','feb','mar']
+    # Below is the full one. If it is to be used,
+    # it is recommended to use an EMR cluster with multiple nodes since the immigration files are too large
+    #months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
     
     for month in months:
         immigration_data_path = f'../../data/18-83510-I94-Data-2016/i94_{month}16_sub.sas7bdat'
         
         # Read data using month in input file name
         df = spark.read.format('com.github.saurfang.sas.spark').load(immigration_data_path)
-        # Repartition
+        # Repartition (This can be changed depending on the core number aand maybe moved to config file if need be)
         df = df.repartition(8)
         
         df = df.dropDuplicates().drop(*drop_cols).na.drop()
@@ -201,13 +212,20 @@ def process_immigrations_ports_cities_data(spark, output_data):
         # Append data to existing folders throughout the loop
         time_df.write.mode('append').parquet(time_output_data)
         fact_immig_df.write.mode('append').parquet(immigrations_output_data)
+        break
     
-    print('Data processing has been completed.')
+    print('Immigration, ports, cities and time data have been written to S3...')
     
     return
 
 
 def process_temperature_data(spark, output_data):
+    '''
+    Processes temperature data and writes them to S3
+    Parameters:
+            spark       (SparkSession): Spark session object
+            output_data          (str): Output S3 bucket
+    '''
     output_data = output_data + 'dim_temperatures'
     
     temps_df = spark.read.options(header="true",inferSchema="true",nullValue = "NULL")\
@@ -244,6 +262,8 @@ def process_temperature_data(spark, output_data):
     # Write to S3
     final_uni_df.write.parquet(output_data)
     
+    print('Temperature data have been written to S3...')
+    
     return
 
 
@@ -255,7 +275,7 @@ def main():
     Copies data from S3 to Redshift and performs data quality checks.
     '''
     
-    spark = create_spark_session()
+    #spark = create_spark_session()
     output_data = "s3a://i94-udacity-capstone-warehouse/"
     
     # This will create fact_immig, dim_time, dim_cities and dim_ports
@@ -263,6 +283,8 @@ def main():
     
     # This will create dim_temperatures
     process_temperature_data(spark, output_data)
+    
+    print('Copy from S3 to Redshift started...')
     
     # At this point, all data have been successfully written to S3
     # Now, copy to redshift
@@ -294,7 +316,7 @@ def main():
                     , config['KEYS']['AWS_ACCESS_KEY_ID'] \
                     , config['KEYS']['AWS_SECRET_ACCESS_KEY']))
     
-    print('Performing data quality checks...')
+    print('Copy completed. Performing data quality checks...')
     # TODO: Data quality checks
     
     
