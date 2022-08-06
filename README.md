@@ -2,7 +2,9 @@
 
 ## Project Purpose and Scope
 
-United States Department of Homeland Security decided to create a single source of truth database to analyze immigrant behavior. They provided a variety of datasets including I94 immigration data logs, U.S. cities demographics, travel ports, and approximate temperatures across cities.
+**Udacity Data Engineering Nanodegree Program Capstone Project**
+
+Purpose of this project is to create a single source of truth data warehouse to analyze I94 immigration records. We have been provided a variety of datasets including I94 immigration data logs, U.S. cities demographics, travel ports, and approximate temperatures across cities.
 
 ## Technologies and Tools
 
@@ -11,12 +13,15 @@ United States Department of Homeland Security decided to create a single source 
 ![Redshift](https://img.shields.io/badge/AWS-Redshift-red)
 ![S3](https://img.shields.io/badge/AWS-S3-blue)
 
+- Apache Spark           : Apache spark is chosen since it is the state-of-art computing engine.
+- Amazon Redshift and S3 : Due to working together too well and easy usage, S3 is chosen as a data lake technology while Redshift is as a warehouse.
+
 ## Data Model
 
 ![star_schema](star_schema.png)
 
 ## Files
-    1. Capstone Project Template.ipynb : This file is used to explore and clean data as well as create the pipeline.
+    1. Capstone Project Template.ipynb : This file is used to explore, experiment and clean data as well as create the pipeline.
     2. I94_SAS_Labels_Descriptions.SAS : Contains column descriptions of immigration files.
     3. SAS Data files                  : Provided within Udacity workspace. Month by month I94 immigration log files.
     4. dl.cfg                          : Contains access, secret access keys and redshift database configuration information.
@@ -27,10 +32,14 @@ United States Department of Homeland Security decided to create a single source 
     9. create_tables.sql               : Contains Amazon Redshift table creation queries.
 
 ## Data Cleaning and Considerations
+
 * All the null values have been cleared of datasets.
 * Columns with large amounts of missing values have been removed.
 * Some of the columns that are by no means helpful for the scope of the project are also removed.
+* All dupplicates are removed from the final data frames.
 * Only US-related data in the temperatures data are used within the project. The temperature data remaining are averaged and grouped by city.
+* 'municipality' column of port data is treated as city to join port and city data.
+* Ports data is cleaned from non-US records, null iata_code records and 'closed' port type records.
 
 ## Data Dictionary
 
@@ -92,6 +101,16 @@ United States Department of Homeland Security decided to create a single source 
 * The database needed to be accessed by 100+ people ?
 
     Amazon Redshift can handle 100+ users easily.
+
+## Execution 
+
+To execute the project, the following steps must be done **in order**:
+
+1) Create a redshift cluster in **us-west-2** region and enable public accessibility.
+2) Execute the table creation commands in create_tables.sql file.
+3) Fill the dl.cfg file according to cluster settings.
+4) Create an S3 bucket in **us-west-2** region and set the 'output_data' variable in etl.py to the bucket name.
+5) Get your coffee and run etl.py on terminal.
 
 ## Author
 
