@@ -212,7 +212,6 @@ def process_immigrations_ports_cities_data(spark, output_data):
         # Append data to existing folders throughout the loop
         time_df.write.mode('append').parquet(time_output_data)
         fact_immig_df.write.mode('append').parquet(immigrations_output_data)
-        break
     
     print('Immigration, ports, cities and time data have been written to S3...')
     
