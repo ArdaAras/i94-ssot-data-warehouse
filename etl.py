@@ -274,7 +274,7 @@ def main():
     Copies data from S3 to Redshift and performs data quality checks.
     '''
     
-    #spark = create_spark_session()
+    spark = create_spark_session()
     output_data = "s3a://i94-udacity-capstone-warehouse/"
     
     # This will create fact_immig, dim_time, dim_cities and dim_ports
@@ -298,6 +298,7 @@ def main():
     except Exception as err:
         print (f'Error:{err}')
     
+    
     # Copy
     for table in table_names:
         copy_query = """
@@ -316,8 +317,49 @@ def main():
                     , config['KEYS']['AWS_SECRET_ACCESS_KEY']))
     
     print('Copy completed. Performing data quality checks...')
-    # TODO: Data quality checks
     
+    # Some data quality checks
+    row_count_checks = [
+        "SELECT COUNT(*) FROM fact_immigrations",
+        "SELECT COUNT(*) FROM dim_temperatures",
+        "SELECT COUNT(*) FROM dim_ports",
+        "SELECT COUNT(*) FROM dim_cities",
+        "SELECT COUNT(*) FROM dim_time"
+    ]
+    
+    print('Checking row counts...')
+    for query in row_count_checks:
+        print(f'Executing {query}')
+        cur.execute(query)
+        result = cur.fetchone()
+        if result[0] > 0:
+            print(f'Row count: {result[0]}, PASS')
+        else:
+            print(f'Row count: {result[0]}, FAIL')
+    
+    null_checks = [
+        "SELECT COUNT(*) FROM fact_immigrations WHERE immigration_id is null",
+        "SELECT COUNT(*) FROM dim_temperatures WHERE city is null",
+        "SELECT COUNT(*) FROM dim_ports WHERE port_id is null",
+        "SELECT COUNT(*) FROM dim_cities WHERE city is null",
+        "SELECT COUNT(*) FROM dim_time WHERE sas_timestamp is null"
+    ]
+    
+    print('Checking nulls...')
+    for query in null_checks:
+        print(f'Executing {query}')
+        cur.execute(query)
+        result = cur.fetchone()
+        if result[0] == 0:
+            print(f'PASS')
+        else:
+            print(f'NULL count: {result[0]}, FAIL')
+    
+    # Close connection
+    if conn:
+        print('Closing connection...')
+        cur.close()
+        conn.close()
     
 if __name__ == "__main__":
     main()
