@@ -112,6 +112,52 @@ To execute the project, the following steps must be done **in order**:
 4) Create an S3 bucket in **us-west-2** region and set the 'output_data' variable in etl.py to the bucket name.
 5) Get your coffee and run etl.py on terminal.
 
+## Some example queries
+
+Once the etl process is completed, **Redshift query editor** can be used to analyze data. Below are some example queries:
+
+1) Get ID, age and arrival day of the month of the immigrants who used Orlando Executive Airport and younger than 5 years old 
+
+<pre><code>select immigration_id,immig.age,dimt.day
+from fact_immigrations immig join dim_time dimt on immig.arrival_date = dimt.sas_timestamp
+where immig.age < 5 and immig.landing_port = 'ORL'</code></pre>
+
+![query1](results/query1.png)
+
+2) How old is the oldest immigrant?
+
+<pre><code>SELECT age FROM fact_immigrations ORDER BY age DESC LIMIT 1</code></pre>
+
+![query2](results/query2.png)
+
+3) Get port types used by immigrants in order
+   
+<pre><code>SELECT ports.type as port_type, COUNT(*) as total
+FROM fact_immigrations immig JOIN dim_ports ports ON immig.city = ports.city AND immig.landing_port = ports.iata_code
+GROUP BY  ports.type
+ORDER BY total DESC</code></pre>
+
+![query3](results/query3.png)
+
+4) Top 5 popular cities amongst immigrants
+
+<pre><code>SELECT city, count(*)
+FROM fact_immigrations
+GROUP BY city
+ORDER BY count DESC
+LIMIT 5</code></pre>
+
+![query4](results/query4.png)
+
+5) What day of the week do the immigrants prefer coming to the US? (1=Sunday, ... ,7=Saturday)
+
+<pre><code>SELECT dimt.weekday as arrival_day, count(*)
+FROM fact_immigrations immig JOIN dim_time dimt ON immig.arrival_date = dimt.sas_timestamp
+GROUP BY dimt.weekday
+ORDER BY arrival_day ASC</code></pre>
+
+![query5](results/query5.png)
+
 ## Author
 
 [Arda Aras](https://www.linkedin.com/in/arda-aras/)
