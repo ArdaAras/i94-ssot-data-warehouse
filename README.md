@@ -36,7 +36,7 @@ Purpose of this project is to create a single source of truth data warehouse to 
 * All the null values have been cleared of datasets.
 * Columns with large amounts of missing values have been removed.
 * Some of the columns that are by no means helpful for the scope of the project are also removed.
-* All dupplicates are removed from the final data frames.
+* All duplicates are removed from the final data frames.
 * Only US-related data in the temperatures data are used within the project. The temperature data remaining are averaged and grouped by city.
 * 'municipality' column of port data is treated as city to join port and city data.
 * Ports data is cleaned from non-US records, null iata_code records and 'closed' port type records.
